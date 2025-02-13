@@ -1,4 +1,5 @@
 # Create Project
+cd [file dirname [file normalize [info script]]]
 create_project lab5 ./ -part xc7z020clg400-1 -force
 set_property board_part tul.com.tw:pynq-z2:part0:1.0 [current_project]
 
