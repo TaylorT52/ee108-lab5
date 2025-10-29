@@ -291,6 +291,6 @@ set_property -dict {PACKAGE_PIN J18 IOSTANDARD TMDS_33} [get_ports {TMDS_Data_p[
 # set_property PACKAGE_PIN V7 [get_ports clkSel];	#RPIO_27_R, connector Pin 13, FPGA Signal name RP_IO04						
 # 	set_property IOSTANDARD LVCMOS33 [get_ports clkSel]
 
-
+set_false_path -from [get_cells -hier -regexp {adau1761_codec.*}]
 
 
