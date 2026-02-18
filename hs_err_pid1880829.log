@@ -1,0 +1,23 @@
+#
+# An unexpected error has occurred (11)
+#
+Stack:
+/lib64/libc.so.6(+0x4e5b0) [0x780f3ec385b0]
+/cad/xilinx/vivado/2019.2/Vivado/2019.2/lib/lnx64.o/libverific.so(+0x5e4500) [0x780f402e5500]
+/cad/xilinx/vivado/2019.2/Vivado/2019.2/lib/lnx64.o/libverific.so(Verific::hdl_file_sort::QuickParseVerilog(char const*)+0x952) [0x780f402f8fe2]
+/cad/xilinx/vivado/2019.2/Vivado/2019.2/lib/lnx64.o/libverific.so(Verific::hdl_file_sort::QuickAnalyze(char const*, char const*)+0x79) [0x780f40302de9]
+/cad/xilinx/vivado/2019.2/Vivado/2019.2/lib/lnx64.o/libverific.so(Verific::hdl_file_sort::CreateNode(char const*, char const*)+0x37) [0x780f40303677]
+/cad/xilinx/vivado/2019.2/Vivado/2019.2/lib/lnx64.o/libverific.so(Verific::hdl_file_sort::RegisterFileInternal(char const*, char const*, unsigned int, unsigned int, unsigned int)+0x5a) [0x780f40304bea]
+srcscanner() [0x49b510]
+srcscanner() [0x4a37ff]
+srcscanner() [0x4a397e]
+srcscanner() [0x4506ea]
+srcscanner() [0x47c0f8]
+/cad/xilinx/vivado/2019.2/Vivado/2019.2/lib/lnx64.o/libtcl8.5.so(TclInvokeStringCommand+0x76) [0x780f40e19f66]
+/cad/xilinx/vivado/2019.2/Vivado/2019.2/lib/lnx64.o/libtcl8.5.so(+0x334af) [0x780f40e1e4af]
+/cad/xilinx/vivado/2019.2/Vivado/2019.2/lib/lnx64.o/libtcl8.5.so(+0x34b38) [0x780f40e1fb38]
+/cad/xilinx/vivado/2019.2/Vivado/2019.2/lib/lnx64.o/libtcl8.5.so(Tcl_EvalEx+0x13) [0x780f40e200a3]
+/cad/xilinx/vivado/2019.2/Vivado/2019.2/lib/lnx64.o/libtcl8.5.so(Tcl_Eval+0x15) [0x780f40e200c5]
+srcscanner(main+0x293) [0x43b993]
+/lib64/libc.so.6(__libc_start_main+0xe5) [0x780f3ec247e5]
+srcscanner() [0x43e9b7]

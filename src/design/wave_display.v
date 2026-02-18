@@ -13,5 +13,97 @@ module wave_display (
     output wire [7:0] b
 );
 
-// Implement me!
+
+    //address mapping (combinational)
+    //display waveform only in middle quadrants (x[10:8] == 001 or 010)
+    //and only in top half of screen (y[9] == 0).
+    //
+    //for those quadrants:
+    //   x = 001xxxxxxxx -> addr = {read_index, 8'b0xxxxxxx} with x LSB dropped
+    //   x = 010xxxxxxxx -> addr = {read_index, 8'b1xxxxxxx} with x LSB dropped
+    // ----------------------------
+
+    wire in_mid_quadrants = (x[10:8] == 3'b001) || (x[10:8] == 3'b010);
+    wire in_top_half      = (y[9] == 1'b0);
+
+    //drop x[0] so the waveform is 2 pixels wide.
+    wire [6:0] x_thick = x[7:1]; //7 bits after dropping LSB
+
+    wire [7:0] addr_low =
+        (x[10:8] == 3'b001) ? {1'b0, x_thick} :
+        (x[10:8] == 3'b010) ? {1'b1, x_thick} :
+                              8'h00; //don't care outside draw region
+
+    wire [8:0] addr_comb = {read_index, addr_low};
+
+    assign read_address = addr_comb;
+
+    //adjust read_value for 800x480 display:
+    //read_value_adjusted = read_value/2 + 32
+    wire [7:0] read_value_adjusted = (read_value >> 1) + 8'd32;
+
+
+
+    reg [10:0] x1, x2;
+    reg [9:0]  y1, y2;
+    reg        v1, v2;
+    reg        draw1, draw2;
+
+    reg [8:0] addr1, addr2, addr3;
+
+    always @(posedge clk) begin
+        if (reset) begin
+            x1 <= 11'd0; x2 <= 11'd0;
+            y1 <= 10'd0; y2 <= 10'd0;
+            v1 <= 1'b0;  v2 <= 1'b0;
+            draw1 <= 1'b0; draw2 <= 1'b0;
+
+            addr1 <= 9'd0; addr2 <= 9'd0; addr3 <= 9'd0;
+        end else begin
+            x1 <= x;  x2 <= x1;
+            y1 <= y;  y2 <= y1;
+            v1 <= valid; v2 <= v1;
+
+            draw1 <= (in_mid_quadrants && in_top_half);
+            draw2 <= draw1;
+
+            addr1 <= addr_comb;
+            addr2 <= addr1;
+            addr3 <= addr2;
+        end
+    end
+
+    // ----------------------------
+    //track last two *accepted* samples (8-bit Y-ish values)
+    //update only when the pipelined address changes (every other pixel).
+    reg [7:0] samp_prev, samp_curr;
+
+    always @(posedge clk) begin
+        if (reset) begin
+            samp_prev <= 8'd0;
+            samp_curr <= 8'd0;
+        end else begin
+            if (addr2 != addr3) begin
+                samp_prev <= samp_curr;
+                samp_curr <= read_value_adjusted;
+            end
+        end
+    end
+
+
+    //Y mapping: in top half, drop MSB y[9] (known 0) and drop LSB y[0]
+    //so we compare 8-bit quantities and make the line 2 pixels tall.
+    wire [7:0] y_disp = y2[8:1];
+
+    wire [7:0] y_min = (samp_prev < samp_curr) ? samp_prev : samp_curr;
+    wire [7:0] y_max = (samp_prev < samp_curr) ? samp_curr : samp_prev;
+
+    wire pixel_on = draw2 && v2 && (y_disp >= y_min) && (y_disp <= y_max);
+
+    assign valid_pixel = pixel_on;
+
+    assign r = pixel_on ? 8'hFF : 8'h00;
+    assign g = pixel_on ? 8'hFF : 8'h00;
+    assign b = pixel_on ? 8'hFF : 8'h00;
+
 endmodule
