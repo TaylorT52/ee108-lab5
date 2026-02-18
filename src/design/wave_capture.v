@@ -35,7 +35,7 @@ always @(posedge clk) begin
         state <= ARMED;
         prev_sample <= 16'd0;
         counter <= 1'b0;
-        read_index <= 1'b0;
+        read_index <= 8'd0;
         
     end else begin
         state <= next_state;
@@ -50,7 +50,7 @@ always @(posedge clk) begin
         if (next_state == ARMED) begin
             counter <= 8'd0;
         end
-        if (state == ACTIVE && new_sample_ready) begin
+        if (state == ACTIVE && new_sample_ready && counter != DONE) begin
            counter <= counter + 8'd1; 
         end
     end 
