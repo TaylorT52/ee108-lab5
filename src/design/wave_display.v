@@ -119,11 +119,6 @@ module wave_display (
       end
     end
 
-    reg [7:0] samp_prev, samp_curr;
-
-
-
-
     //Y mapping: in top half, drop MSB y[9] (known 0) and drop LSB y[0]
     //so we compare 8-bit quantities and make the line 2 pixels tall.
     wire [7:0] y_disp = y2[8:1];
