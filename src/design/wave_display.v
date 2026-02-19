@@ -44,7 +44,17 @@ module wave_display (
     //read_value_adjusted = read_value/2 + 32
     wire [7:0] read_value_adjusted = (read_value >> 1) + 8'd32;
 
+    reg [7:0] rv1, rv2;
 
+    always @(posedge clk) begin
+      if (reset) begin
+        rv1 <= 8'd0;
+        rv2 <= 8'd0;
+      end else begin
+        rv1 <= read_value_adjusted;
+        rv2 <= rv1;
+      end
+    end
 
     reg [10:0] x1, x2;
     reg [9:0]  y1, y2;
@@ -81,18 +91,18 @@ module wave_display (
     reg [7:0] samp_prev, samp_curr;
 
     always @(posedge clk) begin
-        if (reset) begin
-            samp_prev <= 8'd0;
-            samp_curr <= 8'd0;
-        end else if (!in_draw_region) begin
-            // leaving the waveform area: kill history so boundary pixels can't draw
-            samp_prev <= 8'd0;
-            samp_curr <= 8'd0;
-        end else if (addr2 != addr3) begin
-            samp_prev <= samp_curr;
-            samp_curr <= read_value_adjusted;
-        end
+      if (reset) begin
+        samp_prev <= 8'd0;
+        samp_curr <= 8'd0;
+      end else if (!in_draw_region) begin
+        samp_prev <= 8'd0;
+        samp_curr <= 8'd0;
+      end else if (addr2 != addr3) begin
+        samp_prev <= samp_curr;
+        samp_curr <= rv2;          // <-- use aligned sample
+      end
     end
+
 
 
     //Y mapping: in top half, drop MSB y[9] (known 0) and drop LSB y[0]
