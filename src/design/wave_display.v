@@ -88,8 +88,20 @@ module wave_display (
     //track last two accepted samples (8-bit Y-ish values)
     //update only when the pipelined address changes (every other pixel).
     wire in_draw_region = draw2 && v2;   // draw2 is aligned x in 001/010 && y top-half
+    reg in_draw_region_d;
+    
     reg [7:0] samp_prev, samp_curr;
-
+    
+    always @(posedge clk) begin
+      if (reset) begin
+        in_draw_region_d <= 1'b0;
+      end else begin
+        in_draw_region_d <= in_draw_region;
+      end
+    end
+    
+    wire enter_draw_region = in_draw_region && !in_draw_region_d;
+    
     always @(posedge clk) begin
       if (reset) begin
         samp_prev <= 8'd0;
@@ -97,11 +109,18 @@ module wave_display (
       end else if (!in_draw_region) begin
         samp_prev <= 8'd0;
         samp_curr <= 8'd0;
+      end else if (enter_draw_region) begin
+        // first column: no vertical segment
+        samp_prev <= rv2;
+        samp_curr <= rv2;
       end else if (addr2 != addr3) begin
         samp_prev <= samp_curr;
-        samp_curr <= rv2;          // <-- use aligned sample
+        samp_curr <= rv2;
       end
     end
+
+    reg [7:0] samp_prev, samp_curr;
+
 
 
 
