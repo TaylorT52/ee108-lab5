@@ -75,20 +75,22 @@ module wave_display (
         end
     end
 
-    // ----------------------------
-    //track last two *accepted* samples (8-bit Y-ish values)
+    //track last two accepted samples (8-bit Y-ish values)
     //update only when the pipelined address changes (every other pixel).
+    wire in_draw_region = draw2 && v2;   // draw2 is aligned x in 001/010 && y top-half
     reg [7:0] samp_prev, samp_curr;
 
     always @(posedge clk) begin
         if (reset) begin
             samp_prev <= 8'd0;
             samp_curr <= 8'd0;
-        end else begin
-            if (addr2 != addr3) begin
-                samp_prev <= samp_curr;
-                samp_curr <= read_value_adjusted;
-            end
+        end else if (!in_draw_region) begin
+            // leaving the waveform area: kill history so boundary pixels can't draw
+            samp_prev <= 8'd0;
+            samp_curr <= 8'd0;
+        end else if (addr2 != addr3) begin
+            samp_prev <= samp_curr;
+            samp_curr <= read_value_adjusted;
         end
     end
 
