@@ -16,46 +16,57 @@ module wave_display_top(
     wire [8:0] read_address, write_address;
     wire read_index;
     wire write_en;
-    wire wave_display_idle = ~vsync;
+    // wrong because vsync is a synchronnization pulse at the start/end of frames
+    //wire wave_display_idle = ~vsync;
+    
+    // use valid instead as those are the moments when we are in the active visible region, where it is not safe to swap buffer
+    // so this will only allow buffer swap when we're not outputting visible pixels
+    wire wave_display_idle = ~valid; 
 
+    // captures audio samples to be stored in the RAM
+    // swaps buffers only when the display is idle
     wave_capture wc(
         .clk(clk),
         .reset(reset),
         .new_sample_ready(new_sample),
-        .new_sample_in(sample),
+        .new_sample_in(sample), // 16 bit signed audio sample from codec
         .write_address(write_address),
-        .write_enable(write_en),
-        .write_sample(write_sample),
-        .wave_display_idle(wave_display_idle),
-        .read_index(read_index)
+        .write_enable(write_en), // address into sample RAM 
+        .write_sample(write_sample), // high when writing
+        .wave_display_idle(wave_display_idle), // 8 bit unsigned sample written to RAM
+        .read_index(read_index) // which buffer the display reads while the other is writing
     );
     
-    ram_1w2r #(.WIDTH(8), .DEPTH(9)) sample_ram(
+    // sample RAM: stores waveform samples to be displayed
+    // write port driven by wave_capture, read port driven by wave_display
+    ram_1w2r #(.WIDTH(8), .DEPTH(9)) sample_ram( // width = 8 bit samples, depth = 9 bit address
         .clka(clk),
         .clkb(clk),
-        .wea(write_en),
-        .addra(write_address),
-        .dina(write_sample),
-        .douta(),
-        .addrb(read_address),
-        .doutb(read_sample)
+        .wea(write_en), // write enable from wave_capture
+        .addra(write_address), 
+        .dina(write_sample), // sample data to write
+        .douta(), // unused write side read port
+        .addrb(read_address), // read address from wave_display
+        .doutb(read_sample) // sample value read for display
     );
  
+    // converts RAM samples into pixels
     wire valid_pixel;
     wire [7:0] wd_r, wd_g, wd_b;
     wave_display wd(
         .clk(clk),
         .reset(reset),
-        .x(x),
-        .y(y),
-        .valid(valid),
-        .read_address(read_address),
-        .read_value(read_sample),
-        .read_index(read_index),
-        .valid_pixel(valid_pixel),
-        .r(wd_r), .g(wd_g), .b(wd_b)
+        .x(x), // pixel x coordinate from VGA
+        .y(y), // pixel y coordinate from VGA
+        .valid(valid), // high during the active video region
+        .read_address(read_address), // address into the RAM
+        .read_value(read_sample), // value read from RAM
+        .read_index(read_index), // which buffer to read from
+        .valid_pixel(valid_pixel), // high when the pixel should be drawn
+        .r(wd_r), .g(wd_g), .b(wd_b) // white RGB to display wave
     );
-
+    
+    // only drive RGB to white wave when wave_display outputs valid waveform pixel
     assign {r, g, b} = valid_pixel ? {wd_r, wd_g, wd_b} : {3{8'b0}};
 
 endmodule
